@@ -1,0 +1,19 @@
+{
+  "upstream": {
+    "url": "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git",
+    "tag": "v6.18.62",
+    "commit": "c3f63d70f236bb7685e6d11d1d9b5b351552e600"
+  },
+  "board_support": {
+    "url": "https://github.com/orangepi-xunlong/linux-orangepi",
+    "commit": "2ac08e8c7cdc28abbdc5c9a9dd812f887ae9c79f",
+    "import_commit": "a61495df9",
+    "note": "Selected source subtrees; preserved license/copyright notices. Porting commits follow the import."
+  },
+  "initial_config": {
+    "origin": "Orange Pi 4 Pro 1.0.8 shipped board configuration",
+    "sha256": "496b843f53923a4d623ced063ac1ec32f925cb9f9a474526094b1496cf6f37e7"
+  },
+  "compiler": "aarch64-linux-gnu-gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "status": "experimental; not installed or boot-qualified"
+}

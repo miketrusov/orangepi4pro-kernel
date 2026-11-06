@@ -6,7 +6,8 @@ using board-support code from orangepi-xunlong/linux-orangepi.
 
 The orangepi-6.18.y branch targets Linux 6.18 LTS. It is experimental and has not
 been boot-qualified. Other kernel series, including future 7.x work, belong on
-separate branches. The upstream Linux README follows.
+separate branches. Build details: scripts/orangepi/README.
+The upstream Linux README follows.
 
 Linux kernel
 ============
