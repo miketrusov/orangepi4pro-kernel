@@ -198,10 +198,10 @@ static int sunxi_irq_domain_probe(struct platform_device *pdev)
 	intr->dev = dev;
 	intr->irqd = irq_domain_create_hierarchy(parent_domain, 0,
 											GIC_SUPPORT_IRQS,
-											dev_of_node(dev),
+											of_fwnode_handle(dev_of_node(dev)),
 											&sunxi_domain_ops,
 											NULL);
-	if (IS_ERR(intr->irqd)) {
+	if (!intr->irqd) {
 		dev_err(dev, "Failed to allocate IRQ domain\n");
 		return -ENOMEM;
 	}
@@ -210,12 +210,11 @@ static int sunxi_irq_domain_probe(struct platform_device *pdev)
 	return 0;
 }
 
-static int sunxi_irq_domain_remove(struct platform_device *pdev)
+static void sunxi_irq_domain_remove(struct platform_device *pdev)
 {
 	struct sunxi_irq_domain *intr = platform_get_drvdata(pdev);
 
 	irq_domain_remove(intr->irqd);
-	return 0;
 }
 
 static const struct of_device_id sunxi_irq_domain_of_match[] = {
