@@ -160,8 +160,8 @@ static int __init wakeupgen_init(struct device_node *node,
 		return -ENXIO;
 	}
 
-	domain = irq_domain_add_hierarchy(parent_domain, 0, GIC_SUPPORT_IRQS,
-					  node, &sunxi_domain_ops,
+	domain = irq_domain_create_hierarchy(parent_domain, 0, GIC_SUPPORT_IRQS,
+					  of_fwnode_handle(node), &sunxi_domain_ops,
 					  NULL);
 	if (!domain) {
 		pr_err("%s: failed to allocated domain\n", node->full_name);
@@ -196,7 +196,7 @@ static int sunxi_irq_domain_probe(struct platform_device *pdev)
 		return -ENOMEM;
 
 	intr->dev = dev;
-	intr->irqd = irq_domain_add_hierarchy(parent_domain, 0,
+	intr->irqd = irq_domain_create_hierarchy(parent_domain, 0,
 											GIC_SUPPORT_IRQS,
 											dev_of_node(dev),
 											&sunxi_domain_ops,

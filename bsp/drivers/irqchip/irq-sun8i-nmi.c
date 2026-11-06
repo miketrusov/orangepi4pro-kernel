@@ -92,7 +92,7 @@ static int sunxi_sc_nmi_set_type(struct irq_data *data, unsigned int flow_type)
 	unsigned int src_type;
 	unsigned int i;
 
-	irq_gc_lock(gc);
+	guard(raw_spinlock)(&gc->lock);
 
 	switch (flow_type & IRQF_TRIGGER_MASK) {
 	case IRQ_TYPE_EDGE_FALLING:
@@ -109,7 +109,6 @@ static int sunxi_sc_nmi_set_type(struct irq_data *data, unsigned int flow_type)
 		src_type = SUNXI_SRC_TYPE_LEVEL_LOW;
 		break;
 	default:
-		irq_gc_unlock(gc);
 		pr_err("Cannot assign multiple trigger modes to IRQ %d.\n",
 			data->irq);
 		return -EBADR;
@@ -127,7 +126,6 @@ static int sunxi_sc_nmi_set_type(struct irq_data *data, unsigned int flow_type)
 	src_type_reg |= src_type;
 	sunxi_sc_nmi_write(gc, ctrl_off, src_type_reg);
 
-	irq_gc_unlock(gc);
 
 	return IRQ_SET_MASK_OK;
 }
@@ -153,20 +151,24 @@ static void sunxi_nmi_pad_control(struct device_node *node)
 static struct irq_chip_generic *sys_gc;
 static const struct sunxi_sc_nmi_reg_offs *sys_reg_offs;
 static uint32_t sys_vaule;
-static int sunxi_nmi_suspend(void)
+static int sunxi_nmi_suspend(void *data)
 {
 	sys_vaule = sunxi_sc_nmi_read(sys_gc, sys_reg_offs->enable);
 	return 0;
 }
 
-static void sunxi_nmi_resume(void)
+static void sunxi_nmi_resume(void *data)
 {
 	sunxi_sc_nmi_write(sys_gc, sys_reg_offs->enable, sys_vaule);
 }
 
-static struct syscore_ops sunxi_nmi_syscore_ops = {
+static const struct syscore_ops sunxi_nmi_syscore_ops = {
 	.suspend = sunxi_nmi_suspend,
 	.resume = sunxi_nmi_resume,
+};
+
+static struct syscore sunxi_nmi_syscore = {
+	.ops = &sunxi_nmi_syscore_ops,
 };
 
 static int sunxi_sc_nmi_irq_init(struct device_node *node,
@@ -240,7 +242,7 @@ static int sunxi_sc_nmi_irq_init(struct device_node *node,
 	sunxi_nmi_pad_control(node);
 	sys_gc = gc;
 	sys_reg_offs = reg_offs;
-	register_syscore_ops(&sunxi_nmi_syscore_ops);
+	register_syscore(&sunxi_nmi_syscore);
 
 	irq_set_chained_handler_and_data(irq, sunxi_sc_nmi_handle_irq, domain);
 
@@ -278,7 +280,7 @@ static void sunxi_irq_nmi_remove(struct platform_device *pdev)
 	struct device_node *node = pdev->dev.of_node;
 	struct resource res;
 
-	unregister_syscore_ops(&sunxi_nmi_syscore_ops);
+	unregister_syscore(&sunxi_nmi_syscore);
 	iounmap(sys_gc->reg_base);
 	of_address_to_resource(node, 0, &res);
 	release_mem_region(res.start, resource_size(&res));
