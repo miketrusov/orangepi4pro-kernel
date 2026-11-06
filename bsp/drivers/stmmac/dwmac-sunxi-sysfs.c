@@ -422,7 +422,7 @@ static int sunxi_dwmac_calibrate_scan_window(struct sunxi_dwmac *chip, struct su
 
 	netif_testing_on(ndev);
 
-	ret = phy_loopback(priv->dev->phydev, true);
+	ret = phy_loopback(priv->dev->phydev, true, SPEED_1000);
 	if (ret)
 		goto err;
 
@@ -455,7 +455,7 @@ static int sunxi_dwmac_calibrate_scan_window(struct sunxi_dwmac *chip, struct su
 		cali->tx_delay = cali->rx_delay = 0;
 	}
 
-	phy_loopback(priv->dev->phydev, false);
+	phy_loopback(priv->dev->phydev, false, 0);
 
 err:
 	netif_testing_off(ndev);
