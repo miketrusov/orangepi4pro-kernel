@@ -1,1 +1,2 @@
-#define AW_BSP_VERSION "7b992010f2-dirty, 2025-04-29 09:35:36"
+/* SPDX-License-Identifier: GPL-2.0-only */
+#define AW_BSP_VERSION "xunlong-2ac08e8c7cdc-6.18-port"

@@ -584,6 +584,7 @@ USERINCLUDE    := \
 # Use LINUXINCLUDE when you must reference the include/ directory.
 # Needed to be compatible with the O= option
 LINUXINCLUDE    := \
+		-I$(srctree)/bsp/include \
 		-I$(srctree)/arch/$(SRCARCH)/include \
 		-I$(objtree)/arch/$(SRCARCH)/include/generated \
 		-I$(srctree)/include \
@@ -801,7 +802,7 @@ endif
 ifeq ($(KBUILD_EXTMOD),)
 # Objects we will link into vmlinux / subdirs we need to visit
 core-y		:=
-drivers-y	:=
+drivers-y	:= bsp/
 libs-y		:= lib/
 endif # KBUILD_EXTMOD
 
