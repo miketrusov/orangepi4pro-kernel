@@ -18,7 +18,7 @@
 #include <linux/module.h>
 #include <linux/of.h>
 #include <linux/pm_opp.h>
-#include "../../../drivers/opp/opp.h"
+#include "../../../../drivers/opp/opp.h"
 #include <linux/platform_device.h>
 #include <linux/regulator/consumer.h>
 #include <linux/slab.h>
@@ -179,7 +179,7 @@ static int cpufreq_init(struct cpufreq_policy *policy)
 
 	transition_latency = dev_pm_opp_get_max_transition_latency(cpu_dev);
 	if (!transition_latency)
-		transition_latency = CPUFREQ_ETERNAL;
+		transition_latency = CPUFREQ_DEFAULT_TRANSITION_LATENCY_NS;
 
 	cpumask_copy(policy->cpus, priv->cpus);
 	policy->driver_data = priv;
@@ -189,21 +189,7 @@ static int cpufreq_init(struct cpufreq_policy *policy)
 	policy->cpuinfo.transition_latency = transition_latency;
 	policy->dvfs_possible_from_any_cpu = true;
 
-	/* Support turbo/boost mode */
-	if (policy_has_boost_freq(policy)) {
-		/* This gets disabled by core on driver unregister */
-		ret = cpufreq_enable_boost_support();
-		if (ret)
-			goto out_clk_put;
-		cpufreq_dt_attr[1] = &cpufreq_freq_attr_scaling_boost_freqs;
-	}
-
 	return 0;
-
-out_clk_put:
-	clk_put(cpu_clk);
-
-	return ret;
 }
 
 static int cpufreq_online(struct cpufreq_policy *policy)
@@ -221,10 +207,9 @@ static int cpufreq_offline(struct cpufreq_policy *policy)
 	return 0;
 }
 
-static int cpufreq_exit(struct cpufreq_policy *policy)
+static void cpufreq_exit(struct cpufreq_policy *policy)
 {
 	clk_put(policy->clk);
-	return 0;
 }
 
 static int __maybe_unused sunxi_get_power(struct device *dev, unsigned long *uW,
@@ -340,6 +325,7 @@ static struct cpufreq_driver dt_cpufreq_driver = {
 	.register_em = sunxi_cpufreq_register_em,
 	.name = "cpufreq-dt",
 	.attr = cpufreq_dt_attr,
+	.set_boost = cpufreq_boost_set_sw,
 	.suspend = cpufreq_generic_suspend,
 };
 
@@ -515,7 +501,7 @@ static struct platform_driver dt_cpufreq_platdrv = {
 		.name	= "cpufreq-dt",
 	},
 	.probe		= dt_cpufreq_probe,
-	.remove_new	= dt_cpufreq_remove,
+	.remove	= dt_cpufreq_remove,
 };
 module_platform_driver(dt_cpufreq_platdrv);
 
