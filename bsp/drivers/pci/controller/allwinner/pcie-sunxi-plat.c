@@ -1263,7 +1263,7 @@ static struct platform_driver sunxi_pcie_plat_driver = {
 #if LINUX_VERSION_CODE < KERNEL_VERSION(6, 12, 0)
 	.remove = sunxi_pcie_plat_remove,
 #else
-	.remove_new = sunxi_pcie_plat_remove,
+	.remove = sunxi_pcie_plat_remove,
 #endif
 };
 
