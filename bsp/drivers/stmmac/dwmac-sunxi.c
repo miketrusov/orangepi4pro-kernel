@@ -579,13 +579,13 @@ static int sunxi_dwmac_resource_get(struct platform_device *pdev, struct sunxi_d
 }
 
 #ifndef MODULE
-static void sunxi_dwmac_set_mac(u8 *dst, u8 *src)
+static void sunxi_dwmac_set_mac(u8 *dst, const char *src)
 {
-	int i;
-	char *p = src;
+	u8 addr[ETH_ALEN];
 
-	for (i = 0; i < ETH_ALEN; i++, p++)
-		dst[i] = simple_strtoul(p, &p, 16);
+	/* An unset override must not erase an address supplied by firmware. */
+	if (mac_pton(src, addr) && is_valid_ether_addr(addr))
+		ether_addr_copy(dst, addr);
 }
 #endif
 
@@ -875,12 +875,12 @@ module_platform_driver(sunxi_dwmac_driver);
 #ifndef MODULE
 static int __init sunxi_dwmac_set_mac_addr(char *str)
 {
-	char *p = str;
+	u8 addr[ETH_ALEN];
 
-	if (str && strlen(str))
-		memcpy(mac_str, p, MAC_ADDR_LEN);
+	if (str && mac_pton(str, addr) && is_valid_ether_addr(addr))
+		strscpy(mac_str, str, sizeof(mac_str));
 
-	return 0;
+	return 1;
 }
 __setup("mac_addr=", sunxi_dwmac_set_mac_addr);
 #endif /* MODULE */
