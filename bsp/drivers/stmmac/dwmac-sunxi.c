@@ -620,7 +620,7 @@ static int sunxi_dwmac_probe(struct platform_device *pdev)
 	chip->res = &stmmac_res;
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0))
-	plat_dat = stmmac_probe_config_dt(pdev, stmmac_res.mac);
+	plat_dat = devm_stmmac_probe_config_dt(pdev, stmmac_res.mac);
 #else
 	plat_dat = stmmac_probe_config_dt(pdev, &stmmac_res.mac);
 	if (IS_ERR_OR_NULL(stmmac_res.mac)) {
@@ -671,7 +671,7 @@ static int sunxi_dwmac_probe(struct platform_device *pdev)
 		plat_dat->flags |= STMMAC_FLAG_SPH_DISABLE;
 	if (chip->variant->flags & SUNXI_DWMAC_MULTI_MSI)
 		plat_dat->flags |= STMMAC_FLAG_MULTI_MSI_EN;
-	chip->interface = plat_dat->mac_interface;
+	chip->interface = plat_dat->phy_interface;
 #else
 	if (chip->variant->flags & SUNXI_DWMAC_SPH_DISABLE)
 		plat_dat->sph_disable = true;
@@ -682,12 +682,9 @@ static int sunxi_dwmac_probe(struct platform_device *pdev)
 	chip->interface = plat_dat->interface;
 #endif
 	plat_dat->clk_csr = 4; /* MDC = AHB(200M)/102 = 2M */
-	if (!plat_dat->has_gmac4) {
-		/* force fix dwmac ip version */
-		plat_dat->has_gmac4 = 1;
-		plat_dat->has_gmac = 0;
-		plat_dat->pmt = 1;
-	}
+	/* Allwinner GMAC-200/300 use the GMAC4 core. */
+	plat_dat->core_type = DWMAC_CORE_GMAC4;
+	plat_dat->pmt = 1;
 
 	ret = sunxi_dwmac_init(pdev, plat_dat->bsp_priv);
 	if (ret)
@@ -719,7 +716,6 @@ err_cfg:
 err_dvr_probe:
 	sunxi_dwmac_exit(pdev, chip);
 err_init:
-	stmmac_remove_config_dt(pdev, plat_dat);
 	return ret;
 }
 
@@ -754,7 +750,7 @@ static int __maybe_unused sunxi_dwmac_suspend(struct device *dev)
 
 	ret = stmmac_suspend(dev);
 	sunxi_dwmac_exit(pdev, chip);
-	stmmac_bus_clks_config(priv, false);
+	stmmac_pltfr_pm_ops.runtime_suspend(dev);
 
 	sunxi_info(chip->dev, "suspend finish %d\n", ret);
 
@@ -769,7 +765,9 @@ static int __maybe_unused sunxi_dwmac_resume(struct device *dev)
 	struct sunxi_dwmac *chip = priv->plat->bsp_priv;
 	int ret;
 
-	stmmac_bus_clks_config(priv, true);
+	ret = stmmac_pltfr_pm_ops.runtime_resume(dev);
+	if (ret)
+		return ret;
 	sunxi_dwmac_init(pdev, chip);
 	if (ndev && ndev->phydev) {
 		phy_device_reset(ndev->phydev, 1);
@@ -793,7 +791,8 @@ static int __maybe_unused sunxi_dwmac_resume(struct device *dev)
 			if (ndev->phydev->state == PHY_UP || ndev->phydev->state == PHY_NOLINK) {
 				if (ndev->phydev->state == PHY_NOLINK)
 					ndev->phydev->state = PHY_UP;
-				phy_queue_state_machine(ndev->phydev, HZ);
+				mod_delayed_work(system_power_efficient_wq,
+					 &ndev->phydev->state_queue, HZ);
 			}
 			mutex_unlock(&ndev->phydev->lock);
 			rtnl_unlock();
