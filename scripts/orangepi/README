@@ -23,7 +23,9 @@ Then, from this checkout:
 Use a fresh output directory for an independent build. The script resolves
 the versioned board defconfig, verifies required built-in drivers, fixes
 build identity/timestamp, and builds Image, modules and the board DTB.
-Module link failures are fatal. The compiler and other host packages are
+Module link failures are fatal. A clean checkout is required; the source commit
+is embedded in the kernel release so different commits use separate module
+directories. The compiler and other host packages are
 recorded for the initial experiment; the host environment is not yet pinned
 in a container and byte-for-byte reproducibility has not been established.
 
