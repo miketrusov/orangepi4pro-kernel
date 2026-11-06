@@ -39,11 +39,7 @@ struct private_data {
 
 static LIST_HEAD(priv_list);
 
-static struct freq_attr *cpufreq_dt_attr[] = {
-	&cpufreq_freq_attr_scaling_available_freqs,
-	NULL,   /* Extra space for boost-attr if required */
-	NULL,
-};
+
 
 static struct private_data *cpufreq_dt_find_data(int cpu)
 {
@@ -324,7 +320,6 @@ static struct cpufreq_driver dt_cpufreq_driver = {
 	.offline = cpufreq_offline,
 	.register_em = sunxi_cpufreq_register_em,
 	.name = "cpufreq-dt",
-	.attr = cpufreq_dt_attr,
 	.set_boost = cpufreq_boost_set_sw,
 	.suspend = cpufreq_generic_suspend,
 };
