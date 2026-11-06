@@ -6,6 +6,7 @@
  * Copyright (c) 2021 ALLWINNER, Co. Ltd.
  */
 
+#include <linux/platform_device.h>
 #include <sunxi-log.h>
 #include <linux/reset.h>
 #include <linux/module.h>
@@ -222,7 +223,7 @@ static void sunxi_pd_detach_dev(struct generic_pm_domain *genpd,
 
 static void sunxi_pmu_delay_timer_callback(struct timer_list *t)
 {
-	struct sunxi_pmu *pmu = from_timer(pmu, t, delay_timer);
+	struct sunxi_pmu *pmu = timer_container_of(pmu, t, delay_timer);
 	pmu->delay_active = false;
 	sunxi_debug(pmu->dev, "10s delay period ended, power off operations now enabled\n");
 }
@@ -513,7 +514,7 @@ static void sunxi_pm_domain_remove(struct platform_device *pdev)
 		sunxi_pm_domain_cleanup(pmu);
 	}
 
-	del_timer_sync(&pmu->delay_timer);
+	timer_delete_sync(&pmu->delay_timer);
 
 	clk_disable_unprepare(pmu->clk);
 	reset_control_assert(pmu->reset);

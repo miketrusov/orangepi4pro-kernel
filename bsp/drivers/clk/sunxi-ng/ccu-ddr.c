@@ -13,6 +13,7 @@
  * published by the Free Software Foundation.
  */
 
+#include <linux/platform_device.h>
 #include <sunxi-log.h>
 #include <linux/module.h>
 #include <linux/clk.h>

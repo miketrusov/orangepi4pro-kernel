@@ -6,6 +6,7 @@
  * Copyright (C) 2024 Allwinner Electronics Co., Ltd.
  */
 
+#include <linux/platform_device.h>
 #include <linux/bitfield.h>
 #include <linux/clk.h>
 #include <linux/delay.h>
@@ -25,7 +26,7 @@
 #include <linux/regulator/consumer.h>
 
 static struct phy *sunxi_cadence_phy_xlate(struct device *dev,
-					  struct of_phandle_args *args);
+					  const struct of_phandle_args *args);
 
 #define phy_set_mask(width, shift)   ((width?((-1U) >> (32-width)):0)  << (shift))
 #define phy_clear_mask(width, shift)   (~(phy_set_mask(width, shift)))
@@ -4291,7 +4292,7 @@ int sunxi_cadence_phy_create(struct device *dev, struct device_node *np,
  *
  *******************************************************************/
 static struct phy *sunxi_cadence_phy_xlate(struct device *dev,
-					  struct of_phandle_args *args)
+					  const struct of_phandle_args *args)
 {
 	struct phy *phy = NULL;
 
