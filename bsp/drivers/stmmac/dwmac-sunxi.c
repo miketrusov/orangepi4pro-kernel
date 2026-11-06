@@ -482,9 +482,9 @@ static int sunxi_dwmac_resource_get(struct platform_device *pdev, struct sunxi_d
 	}
 
 	chip->syscfg_base = devm_ioremap_resource(dev, res);
-	if (!chip->syscfg_base) {
+	if (IS_ERR(chip->syscfg_base)) {
 		sunxi_err(dev, "Phy memory mapping failed\n");
-		return -ENOMEM;
+		return PTR_ERR(chip->syscfg_base);
 	}
 
 	chip->rgmii_clk_ext	= of_property_read_bool(np, "aw,rgmii-clk-ext");
@@ -493,10 +493,12 @@ static int sunxi_dwmac_resource_get(struct platform_device *pdev, struct sunxi_d
 	if (chip->soc_phy_clk_en) {
 		chip->phy_clk = devm_clk_get(dev, "phy");
 		if (IS_ERR(chip->phy_clk)) {
+			if (PTR_ERR(chip->phy_clk) == -EPROBE_DEFER)
+				return -EPROBE_DEFER;
 			chip->phy_clk = devm_clk_get(dev, "phy25m");
 			if (IS_ERR(chip->phy_clk)) {
 				sunxi_err(dev, "Get phy25m clk failed\n");
-				return -EINVAL;
+				return PTR_ERR(chip->phy_clk);
 			}
 		}
 		sunxi_info(dev, "Phy use soc fanout\n");
@@ -507,12 +509,12 @@ static int sunxi_dwmac_resource_get(struct platform_device *pdev, struct sunxi_d
 		chip->hsi_ahb = devm_clk_get(dev, "hsi_ahb");
 		if (IS_ERR(chip->hsi_ahb)) {
 			sunxi_err(dev, "Get hsi_ahb clk failed\n");
-			return -EINVAL;
+			return PTR_ERR(chip->hsi_ahb);
 		}
 		chip->hsi_axi = devm_clk_get(dev, "hsi_axi");
 		if (IS_ERR(chip->hsi_axi)) {
 			sunxi_err(dev, "Get hsi_axi clk failed\n");
-			return -EINVAL;
+			return PTR_ERR(chip->hsi_axi);
 		}
 	}
 
@@ -520,7 +522,7 @@ static int sunxi_dwmac_resource_get(struct platform_device *pdev, struct sunxi_d
 		chip->nsi_clk = devm_clk_get(dev, "nsi");
 		if (IS_ERR(chip->nsi_clk)) {
 			sunxi_err(dev, "Get nsi clk failed\n");
-			return -EINVAL;
+			return PTR_ERR(chip->nsi_clk);
 		}
 	}
 
@@ -539,21 +541,27 @@ static int sunxi_dwmac_resource_get(struct platform_device *pdev, struct sunxi_d
 		chip->hsi_rst = devm_reset_control_get_shared(chip->dev, "hsi");
 		if (IS_ERR(chip->hsi_rst)) {
 			sunxi_err(dev, "Get hsi reset failed\n");
-			return -EINVAL;
+			return PTR_ERR(chip->hsi_rst);
 		}
 	}
 
 	chip->ahb_rst = devm_reset_control_get_optional_shared(chip->dev, "ahb");
 	if (IS_ERR(chip->ahb_rst)) {
 		sunxi_err(dev, "Get mac reset failed\n");
-		return -EINVAL;
+		return PTR_ERR(chip->ahb_rst);
 	}
 
 	chip->dwmac3v3_supply = devm_regulator_get_optional(&pdev->dev, "dwmac3v3");
+	if (IS_ERR(chip->dwmac3v3_supply) &&
+	    PTR_ERR(chip->dwmac3v3_supply) != -ENODEV)
+		return PTR_ERR(chip->dwmac3v3_supply);
 	if (IS_ERR(chip->dwmac3v3_supply))
 		sunxi_warn(dev, "Not found dwmac3v3-supply\n");
 
 	chip->phy3v3_supply = devm_regulator_get_optional(&pdev->dev, "phy3v3");
+	if (IS_ERR(chip->phy3v3_supply) &&
+	    PTR_ERR(chip->phy3v3_supply) != -ENODEV)
+		return PTR_ERR(chip->phy3v3_supply);
 	if (IS_ERR(chip->phy3v3_supply))
 		sunxi_warn(dev, "Not found phy3v3-supply\n");
 
@@ -633,7 +641,7 @@ static int sunxi_dwmac_probe(struct platform_device *pdev)
 
 	ret = sunxi_dwmac_resource_get(pdev, chip, plat_dat);
 	if (ret < 0)
-		return -EINVAL;
+		return ret;
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0))
 #ifdef MODULE
