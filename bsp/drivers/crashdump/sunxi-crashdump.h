@@ -34,7 +34,7 @@ extern int sunxi_get_freq_info(struct device *dev, struct cpufreq_policy *policy
 				u64 end_time, unsigned long target_freq, unsigned long last_freq);
 
 #else
-static int sunxi_get_freq_info(struct device *dev, struct cpufreq_policy *policy, u64 start_time,
+static inline int sunxi_get_freq_info(struct device *dev, struct cpufreq_policy *policy, u64 start_time,
 				u64 end_time, unsigned long target_freq, unsigned long last_freq)
 {
 	return 0;

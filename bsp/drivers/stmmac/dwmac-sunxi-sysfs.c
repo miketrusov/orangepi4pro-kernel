@@ -422,7 +422,8 @@ static int sunxi_dwmac_calibrate_scan_window(struct sunxi_dwmac *chip, struct su
 
 	netif_testing_on(ndev);
 
-	ret = phy_loopback(priv->dev->phydev, true, SPEED_1000);
+	ret = phy_loopback(priv->dev->phydev, true,
+			   priv->dev->phydev->speed);
 	if (ret)
 		goto err;
 
