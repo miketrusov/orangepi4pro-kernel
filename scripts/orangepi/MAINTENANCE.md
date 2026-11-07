@@ -46,7 +46,7 @@ docker run --rm --network none --platform linux/amd64 \
 ```
 
 Use a full checkout and an empty output directory for an independent build.
-Artifacts include Image, DTB, modules, config, System.map, corresponding source
+Artifacts include Image, DTB, modules, config, vmlinux/System.map, corresponding source
 archive, package inventory, manifest, checksums and logs. Module link failures are
 fatal. Each source commit gets a distinct kernel/module release. Inputs are
 pinned and build identity is fixed; byte-for-byte reproducibility across hosts

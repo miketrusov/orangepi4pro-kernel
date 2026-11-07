@@ -29,7 +29,7 @@ rm -f "/work/modules/lib/modules/$release/build" "/work/modules/lib/modules/$rel
 epoch=$(git -C "$src" show -s --format=%ct HEAD)
 tar --sort=name --mtime="@$epoch" --owner=0 --group=0 --numeric-owner \
     -C /work/modules -cf - lib | gzip -n > "$art/modules.tar.gz"
-cp "$O/arch/arm64/boot/Image" "$dtb" "$O/.config" "$O/System.map" "$O/Module.symvers" "$art/"
+cp "$O/arch/arm64/boot/Image" "$dtb" "$O/.config" "$O/System.map" "$O/Module.symvers" "$O/vmlinux" "$art/"
 cp "$src/scripts/orangepi/sources.json" "$art/sources.json"
 cp "$src/scripts/orangepi/ci/Dockerfile" "$art/builder.Dockerfile"
 git -C "$src" archive --format=tar HEAD | gzip -n > "$art/source.tar.gz"
@@ -46,5 +46,5 @@ manifest={'source_commit':subprocess.check_output(['git','-C',str(src),'rev-pars
 print(json.dumps(manifest,indent=2))
 PY
 (cd "$art" && sha256sum Image sun60i-a733-orangepi-4-pro.dtb .config System.map \
-    Module.symvers modules.tar.gz source.tar.gz sources.json builder.Dockerfile \
+    Module.symvers vmlinux modules.tar.gz source.tar.gz sources.json builder.Dockerfile \
     builder-packages.tsv manifest.json > SHA256SUMS)
