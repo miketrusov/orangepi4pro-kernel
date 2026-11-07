@@ -1480,7 +1480,8 @@
 	/*vqmmc-supply = <&reg_aldo1>;*/
 	/*emmc io vol 1.8v*/
 	/*vqmmc-supply = <&reg_cldo1>;*/
-	status = "okay";
+	/* Optional eMMC is not qualified by the headless server profile. */
+	status = "disabled";
 };
 
 &sdc0 {
@@ -3029,6 +3030,10 @@
 };
 
 &gmac0_phy0 {
+	/* Match the working vendor PHY clock output and strap delays. */
+	motorcomm,clk-out-frequency-hz = <125000000>;
+	rx-internal-delay-ps = <1900>;
+	tx-internal-delay-ps = <150>;
 	//compatible = "ethernet-phy-id7b74.4412";
 	reset-gpios;// = <&pio PH 16 GPIO_ACTIVE_LOW>;
 	//reset-assert-us = <100000>;
@@ -3036,7 +3041,7 @@
 };
 
 &gmac0 {
-	phy-mode = "rgmii";
+	phy-mode = "rgmii-id";
 	pinctrl-0 = <&gmac0_pins_default>;
 	pinctrl-1 = <&gmac0_pins_sleep>;
 	pinctrl-names = "default", "sleep";

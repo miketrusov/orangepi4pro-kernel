@@ -4,8 +4,8 @@ Orange Pi 4 Pro kernel fork
 This fork develops Orange Pi 4 Pro support on the official Linux stable kernel,
 using board-support code from orangepi-xunlong/linux-orangepi.
 
-The orangepi-6.18.y branch targets Linux 6.18 LTS. It is experimental and has not
-been boot-qualified. Other kernel series, including future 7.x work, belong on
+The orangepi-6.18.y branch targets Linux 6.18 LTS. It is experimental; boot testing is in progress and unattended
+updates are not qualified. Other kernel series, including future 7.x work, belong on
 separate branches. Build details: scripts/orangepi/README.
 The upstream Linux README follows.
 

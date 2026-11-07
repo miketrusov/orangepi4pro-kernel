@@ -34,9 +34,26 @@ Outputs are under the chosen build directory:
   arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dtb
   vmlinux, System.map, Module.symvers, .config and built modules
 
-Status: a full cross-build passed on ubu. No candidate has been installed
-or boot-tested. The existing vendor SD boot firmware and running kernel
-remain in place. A green build does not establish storage integrity,
-network behavior, idle power, DVFS safety or recovery. Packaging, runtime
-qualification and weekly CI are follow-up work; there is no unattended
-update or boot-selection logic in this branch.
+Board qualification restrictions
+-------------------------------
+
+The headless DT disables the optional eMMC controller: its empty-slot probe
+blocks boot in the initial 6.18 port. This is an isolation workaround, not an
+eMMC driver fix. eMMC modules are not supported by this configuration yet.
+SD remains the firmware/boot medium and NVMe is the target root filesystem.
+
+The upstream Motorcomm PHY driver needs explicit board data that the vendor
+driver supplied or preserved implicitly: 125 MHz clock output and RGMII PHY
+delays of 1900 ps RX / 150 ps TX. The existing MAC delay taps are retained.
+The PHY values reproduce the working vendor setup; no PHY register writes
+are added to the driver.
+
+Status: a full cross-build passed on Ubuntu 24.04. Early hardware tests reached
+Debian 13 on NVMe and wired SSH with these board settings applied in RAM.
+A build and boot of this tree's DTB must still be checked separately. Original
+vendor firmware and a known-good kernel are retained for supervised fallback.
+This is not production qualification: storage integrity, link recovery,
+thermal/DVFS behavior and idle power require runtime testing. Debian packaging
+and weekly CI remain follow-up work; this branch does not implement unattended
+updates or boot selection. Hardware trials use an external supervisor, not a
+qualified native boot watchdog.
