@@ -1,0 +1,83 @@
+name: Weekly Linux 6.18 candidate
+on:
+  schedule:
+    - cron: '17 11 * * 5' # Friday 21:17 AEST (UTC+10), year-round
+  workflow_dispatch:
+    inputs:
+      failure_probe:
+        description: Test failure reporting without preparing or building a kernel
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: weekly-linux-6.18
+  cancel-in-progress: false
+jobs:
+  prepare:
+    if: github.ref == 'refs/heads/orangepi-6.18.y'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    outputs:
+      source_sha: ${{ steps.candidate.outputs.source_sha }}
+      branch: ${{ steps.candidate.outputs.branch }}
+      target_tag: ${{ steps.candidate.outputs.target_tag }}
+      previous_tag: ${{ steps.candidate.outputs.previous_tag }}
+      vendor_head: ${{ steps.candidate.outputs.vendor_head }}
+      vendor_pinned: ${{ steps.candidate.outputs.vendor_pinned }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          filter: blob:none
+      - name: Exercise update failure boundaries
+        run: python3 -m unittest discover -s scripts/orangepi/tests -v
+      - name: Requested failure-notification probe
+        if: inputs.failure_probe
+        run: |
+          echo 'Intentional notification probe; no kernel update or installation attempted.' >&2
+          exit 1
+      - name: Resolve signed stable release and prepare merge
+        id: candidate
+        run: python3 scripts/orangepi/prepare-update.py
+      - name: Publish unqualified candidate branch
+        if: steps.candidate.outputs.branch != ''
+        env:
+          BRANCH: ${{ steps.candidate.outputs.branch }}
+        run: git push origin "HEAD:refs/heads/$BRANCH"
+  build:
+    needs: prepare
+    uses: ./.github/workflows/build.yml
+    with:
+      source_sha: ${{ needs.prepare.outputs.source_sha }}
+    permissions:
+      contents: read
+  report:
+    if: always() && github.ref == 'refs/heads/orangepi-6.18.y'
+    needs: [prepare, build]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+      checks: write
+    steps:
+      # Run reporting code from the trusted workflow revision, not candidate code.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Record exact build result and notify failures
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PREPARE_RESULT: ${{ needs.prepare.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
+          CANDIDATE_BRANCH: ${{ needs.prepare.outputs.branch }}
+          TARGET_TAG: ${{ needs.prepare.outputs.target_tag }}
+          PREVIOUS_TAG: ${{ needs.prepare.outputs.previous_tag }}
+          VENDOR_HEAD: ${{ needs.prepare.outputs.vendor_head }}
+          VENDOR_PINNED: ${{ needs.prepare.outputs.vendor_pinned }}
+        run: python3 scripts/orangepi/report-update.py

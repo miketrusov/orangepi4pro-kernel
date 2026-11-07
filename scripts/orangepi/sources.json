@@ -15,5 +15,11 @@
     "sha256": "496b843f53923a4d623ced063ac1ec32f925cb9f9a474526094b1496cf6f37e7"
   },
   "compiler": "aarch64-linux-gnu-gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
-  "status": "experimental; not installed or boot-qualified"
+  "hardware_qualification": {
+    "source_commit": "553f6b0706fbe1d8e109f4d3be15382abbd53a4b",
+    "date": "2026-11-07",
+    "scope": "Supervised warm boot, own DTB, Debian 13 NVMe root and wired SSH; not production qualification",
+    "emmc": "disabled; no module available to debug or test"
+  },
+  "status": "experimental; CI results and hardware qualification are tracked separately"
 }

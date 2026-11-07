@@ -63,7 +63,7 @@ The supervised trial then rebooted cleanly into the preserved known-good
 kernel without forced power cycling. It was a one-shot test, not promotion
 to a persistent default. This is not production qualification: NVMe write
 stress, cold boot, link recovery, thermal/DVFS behavior and measured idle
-power remain outstanding. eMMC remains disabled. Debian packaging and weekly
-CI remain follow-up work; this branch does not implement unattended updates
+power remain outstanding. eMMC remains disabled. Debian packaging remains
+follow-up work. Weekly candidate CI is described in MAINTENANCE.md; it does not implement unattended updates
 or boot selection. Hardware trials use an external supervisor, not a
 qualified native boot watchdog. Original vendor firmware is still required.

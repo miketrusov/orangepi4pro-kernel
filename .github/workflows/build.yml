@@ -21,6 +21,8 @@ jobs:
         with:
           ref: ${{ inputs.source_sha || github.sha }}
           persist-credentials: false
+      - name: Test updater failure boundaries
+        run: python3 -m unittest discover -s scripts/orangepi/tests -v
       - name: Build pinned cross-compiler environment
         run: docker build --platform linux/amd64 -t opi-kernel-builder scripts/orangepi/ci
       - name: Clean offline kernel, DTB and modules build

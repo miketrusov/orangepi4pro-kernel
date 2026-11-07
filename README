@@ -9,6 +9,7 @@ Unattended updates are not qualified. Other kernel series, including future 7.x 
 separate branches. Build details: scripts/orangepi/README.
 Optional eMMC is disabled: no eMMC module is available for debugging or testing.
 It will remain disabled until support can be validated on real hardware.
+Weekly candidate builds: scripts/orangepi/MAINTENANCE.md. CI does not deploy kernels.
 The upstream Linux README follows.
 
 Linux kernel

@@ -10,6 +10,7 @@ export LOCALVERSION="-g$(git -C "$src" rev-parse --short=12 HEAD)"
 art=${ARTIFACTS:-/work/artifacts}
 mkdir -p "$art"
 exec > >(tee "$art/build.log") 2>&1
+test ! -e "$O/.config" || { echo 'Use a fresh output directory for CI' >&2; exit 1; }
 dpkg-query -W -f='${Package}\t${Version}\n' | LC_ALL=C sort > "$art/builder-packages.tsv"
 aarch64-linux-gnu-gcc --version
 bash "$src/scripts/orangepi/build.sh"
