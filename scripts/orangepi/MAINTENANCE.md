@@ -52,8 +52,14 @@ Use a full checkout and an empty output directory for an independent build.
 Artifacts include Image, DTB, modules, config, vmlinux/System.map, corresponding source
 archive, package inventory, manifest, checksums and logs. Module link failures are
 fatal. Each source commit gets a distinct kernel/module release. Inputs are
-pinned and build identity is fixed; byte-for-byte reproducibility across hosts
-has not yet been demonstrated. These are candidate artifacts, not Debian packages
+pinned and build identity is fixed. Two independent GitHub-hosted builds of
+`3cd18207e19d4011010c76b7425d2a226d3fda0a` produced identical manifests and all
+12 checksummed outputs: [default build](https://github.com/miketrusov/orangepi4pro-kernel/actions/runs/42373053872)
+and [weekly rehearsal](https://github.com/miketrusov/orangepi4pro-kernel/actions/runs/42373368728).
+This demonstrates reproducibility for that pinned CI setup, not arbitrary
+toolchains or Debian initramfs generation. The build has zero errors or MODPOST
+warnings; 24 nonfatal compiler warnings remain in the imported BSP source.
+These are candidate artifacts, not Debian packages
 or a binary release channel. GitHub retains them for 30 days; retain qualified
 boot artifacts and their exact source independently.
 
@@ -82,6 +88,11 @@ compilation provides no hardware, eMMC or power qualification.
 Build/merge failures open or update one failure issue with source IDs, failed
 stage and a run/log link. A later successful cycle closes it. The manual
 `failure_probe` input exercises reporting without updating or building a kernel.
+Issues must be enabled in repository settings; they are enabled on this fork.
+On 2026-11-07 the intentional probe created
+[issue #1](https://github.com/miketrusov/orangepi4pro-kernel/issues/1), and a
+successful result report commented and closed it. This verifies issue delivery
+and recovery handling; email receipt remains unverified.
 The report job runs trusted default-workflow code with limited write permissions;
 build jobs have read-only tokens, no LAN credentials and no deployment secrets.
 Repository-wide PR approval permissions remain unchanged.
