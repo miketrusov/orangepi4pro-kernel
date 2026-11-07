@@ -26,8 +26,9 @@ build identity/timestamp, and builds Image, modules and the board DTB.
 Module link failures are fatal. A clean checkout is required; the source commit
 is embedded in the kernel release so different commits use separate module
 directories. The compiler and other host packages are
-recorded for the initial experiment; the host environment is not yet pinned
-in a container and byte-for-byte reproducibility has not been established.
+recorded. CI uses a digest-pinned Ubuntu container and a dated package
+snapshot, with network access disabled during compilation. Two independent
+hosted builds of source 3cd1820 produced identical manifests and outputs.
 
 Outputs are under the chosen build directory:
   arch/arm64/boot/Image
@@ -63,7 +64,7 @@ The supervised trial then rebooted cleanly into the preserved known-good
 kernel without forced power cycling. It was a one-shot test, not promotion
 to a persistent default. This is not production qualification: NVMe write
 stress, cold boot, link recovery, thermal/DVFS behavior and measured idle
-power remain outstanding. eMMC remains disabled. Debian packaging remains
-follow-up work. Weekly candidate CI is described in MAINTENANCE.md; it does not implement unattended updates
-or boot selection. Hardware trials use an external supervisor, not a
-qualified native boot watchdog. Original vendor firmware is still required.
+power remain outstanding. eMMC remains disabled. Debian packaging remains follow-up work. Weekly CI publishes immutable
+candidate releases for the separate board-side pull/health/rollback controller.
+The original vendor firmware remains required. See MAINTENANCE.md for the
+current watchdog qualification and deployment limits.

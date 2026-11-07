@@ -56,9 +56,30 @@ jobs:
       source_sha: ${{ needs.prepare.outputs.source_sha }}
     permissions:
       contents: read
+  publish:
+    needs: [prepare, build]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: kernel-${{ needs.prepare.outputs.source_sha }}
+          path: ${{ runner.temp }}/candidate
+      - name: Publish immutable candidate and corresponding source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
+        run: python3 scripts/orangepi/publish-update.py --artifacts "$RUNNER_TEMP/candidate" --source "$SOURCE_SHA"
   report:
     if: always() && github.ref == 'refs/heads/orangepi-6.18.y'
-    needs: [prepare, build]
+    needs: [prepare, build, publish]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -76,6 +97,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PREPARE_RESULT: ${{ needs.prepare.result }}
           BUILD_RESULT: ${{ needs.build.result }}
+          PUBLISH_RESULT: ${{ needs.publish.result }}
           SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
           BASE_SHA: ${{ needs.prepare.outputs.base_sha }}
           TARGET_SHA: ${{ needs.prepare.outputs.target_sha }}

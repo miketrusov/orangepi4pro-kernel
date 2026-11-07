@@ -64,7 +64,7 @@ def main():
     if not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', repo) or not run.isdecimal():
         raise ValueError('Unexpected repository/run identity')
     link = f'https://github.com/{repo}/actions/runs/{run}'
-    okay = env['PREPARE_RESULT'] == env['BUILD_RESULT'] == 'success'
+    okay = env['PREPARE_RESULT'] == env['BUILD_RESULT'] == env.get('PUBLISH_RESULT', 'success') == 'success'
     sha, branch, tag = env.get('SOURCE_SHA', ''), env.get('CANDIDATE_BRANCH', ''), env.get('TARGET_TAG', '')
     if sha and not re.fullmatch(r'[0-9a-f]{40}', sha):
         raise ValueError('Invalid candidate identity')
@@ -73,9 +73,9 @@ def main():
     details = (f"Upstream: `{env.get('PREVIOUS_TAG', '')}` → `{tag}`.\n\n"
                f"Port base: `{env.get('BASE_SHA', '')}`; upstream target: `{env.get('TARGET_SHA', '')}`.\n\n"
                f"Candidate: `{sha or 'not created'}`.\n\n"
-               f"Prepare: **{env['PREPARE_RESULT']}**; build: **{env['BUILD_RESULT']}**.\n\n"
+               f"Prepare: **{env['PREPARE_RESULT']}**; build: **{env['BUILD_RESULT']}**; publish: **{env.get('PUBLISH_RESULT', 'not requested')}**.\n\n"
                f"[Run, first error and downloadable artifacts]({link}).\n\n"
-               'No board installation or kernel promotion was attempted.')
+               'CI publishes a compile-tested candidate. Enrolled boards pull it and independently trial/qualify/promote it; CI has no LAN credentials.')
     if sha:
         api('/check-runs', {'name': 'Headless candidate build', 'head_sha': sha,
             'status': 'completed', 'conclusion': 'success' if okay else 'failure',

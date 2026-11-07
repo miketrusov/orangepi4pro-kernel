@@ -24,8 +24,9 @@ the same workflow. A successful build gets an exact-commit check and a draft PR.
 If repository policy prevents PR creation, it opens a candidate-ready issue
 with a compare link for manual PR creation. It does not expand repository-wide
 approval permissions or introduce a privileged personal token.
-The updater never merges the PR, installs a kernel, modifies SPI or reboots a
-board. With no new release it rebuilds the current default branch.
+The CI updater never merges the PR, connects to the LAN, modifies SPI or
+reboots a board. A separate enrolled-board controller pulls candidate releases
+and independently trials and promotes them. With no new release it rebuilds the current default branch.
 
 Vendor BSP branch drift creates a separate review issue; it is never silently
 imported. Upstream stable fixes do not maintain BSP-only drivers automatically.
@@ -59,17 +60,39 @@ and [weekly rehearsal](https://github.com/miketrusov/orangepi4pro-kernel/actions
 This demonstrates reproducibility for that pinned CI setup, not arbitrary
 toolchains or Debian initramfs generation. The build has zero errors or MODPOST
 warnings; 24 nonfatal compiler warnings remain in the imported BSP source.
-These are candidate artifacts, not Debian packages
-or a binary release channel. GitHub retains them for 30 days; retain qualified
-boot artifacts and their exact source independently.
+These are candidate artifacts, not Debian packages. After a successful weekly
+build, a trusted publisher verifies the exact source and all manifest checksums,
+then publishes `opi4pro-v6.18.N-SHA12` as a prerelease. The release stays draft
+until the update bundle, identity, corresponding source and build/debug evidence
+are uploaded. Published candidates are never overwritten. Actions artifacts
+expire after 30 days; release assets supply the durable public pull feed.
 
 ## Recovery and promotion
 
-Preserve a complete known-good kernel, DTB, initramfs and matching module tree.
-Select candidates one boot at a time and consume the request before handoff, so
-the next reset selects known-good. Boot-file load errors should fall back in the
-same boot. A hung kernel still requires a reset: current hardware qualification
-uses an external Mac/Tapo supervisor. Native watchdog handoff is unqualified.
+Preserve a complete original recovery kernel, DTB, initramfs and module tree.
+The board-side controller stages an inactive A/B boot set, consumes the trial
+request before handoff and leaves an in-progress marker. A finite Linux
+watchdog takeover deadline covers initramfs stalls; PID1 then owns the 16-second
+sunxi watchdog. A separate 120-second userspace health deadline handles a live
+PID1 with an unhealthy boot. Only matching kernel/assets/modules, NVMe root,
+wired LAN, SSH and local service health permit promotion.
+
+A pending marker surviving reset selects the previous good set at most once,
+then original recovery. File/CRC/state failures fall back in the same boot.
+Unknown state never authorizes a candidate. Failed source IDs are quarantined;
+original recovery pauses automatic installs by default. The poll timer needs
+no GitHub token or incoming LAN access. Its allowed repository, 6.18 channel
+and watchdog implementation are pinned by Ansible. Kernel and firmware changes
+outside that qualified contract require explicit review.
+
+Watchdog source `795a17b` builds cleanly in the pinned container. Its exact
+kernel reached SSH with systemd owning the 16-second timer, stayed alive beyond
+a full interval and returned to original recovery without external power.
+A deliberate firmware hang also reset to recovery without Tapo. Initramfs,
+runtime panic and persistent A/B live qualification are being completed;
+cloud compilation alone does not qualify any candidate. Real U-Boot Hush
+sandbox tests cover the selector and its failure/fallback branches. The
+external Tapo supervisor remains the development rescue during qualification.
 
 SPI-to-NVMe boot can retain this design: SPI holds firmware, NVMe holds separate
 known-good/candidate boot sets and the selection state, and SD is rescue media.
@@ -92,7 +115,8 @@ Issues must be enabled in repository settings; they are enabled on this fork.
 On 2026-11-07 the intentional probe created
 [issue #1](https://github.com/miketrusov/orangepi4pro-kernel/issues/1), and a
 successful result report commented and closed it. This verifies issue delivery
-and recovery handling; email receipt remains unverified.
+and recovery handling. The owner confirmed receiving the failure emails on
+2026-11-08.
 The report job runs trusted default-workflow code with limited write permissions;
 build jobs have read-only tokens, no LAN credentials and no deployment secrets.
 Repository-wide PR approval permissions remain unchanged.
@@ -105,3 +129,15 @@ GitHub can delay/drop scheduled runs and disable schedules after 60 days of
 repository inactivity. A separate heartbeat alarm is still needed to detect a
 job that never starts; it is not supplied by this repository's own schedule.
 Automatic agent repairs remain a separate future change.
+
+## Optional agent-assisted repairs
+
+Keep repair attempts separate from deterministic update/build/publish jobs.
+A future monthly workflow can consume the existing failure issue and exact log,
+give Copilot CLI one bounded repair attempt, rebuild and open a draft PR.
+Do not let the repair job alter the recovery/qualification gates or merge its
+own changes. Copilot CLI programmatic mode is available on Free, but the hosted
+issue-assigned cloud agent requires a paid plan. Personal-allowance CLI runs
+need a dedicated Copilot token; usage and authentication must be checked before
+enabling. A monthly schedule limits attempts, not token consumption.
+No agent repair workflow is enabled here yet.

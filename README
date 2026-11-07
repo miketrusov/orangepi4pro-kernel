@@ -1,32 +1,33 @@
-Orange Pi 4 Pro kernel fork
-==========================
+Orange Pi 4 Pro — headless LTS kernel
+===================================
 
-This fork develops Orange Pi 4 Pro support on the official Linux stable kernel,
-using board-support code from orangepi-xunlong/linux-orangepi.
+Linux 6.18 LTS with the pinned Xunlong A733 BSP, adapted for a minimal
+wired server running Debian 13 from NVMe. This is an independent port,
+not an official Orange Pi image or upstream board-support claim.
 
-The orangepi-6.18.y branch targets Linux 6.18 LTS. It is experimental; a supervised Debian/NVMe/SSH boot has passed.
-Unattended updates are not qualified. Other kernel series, including future 7.x work, belong on
-separate branches. Build details: scripts/orangepi/README.
-Optional eMMC is disabled: no eMMC module is available for debugging or testing.
-It will remain disabled until support can be validated on real hardware.
-Weekly candidate builds: scripts/orangepi/MAINTENANCE.md. CI does not deploy kernels.
-The upstream Linux README follows.
+The optional eMMC controller is disabled: no module is available to debug
+or qualify it. SD carries the existing vendor firmware and boot files;
+NVMe carries the operating system. Graphics, NPU and wireless are outside
+the qualified headless configuration. Future kernel series use separate
+branches; no 7.x branch is currently maintained here.
 
-Linux kernel
-============
+Friday 21:17 AEST CI verifies the latest signed official 6.18 stable tag,
+merges it into a candidate, builds in a pinned offline container, and
+publishes an immutable candidate release with corresponding source.
+Conflicts, build errors and publication failures fail the workflow and
+open an issue; GitHub notification email delivery has been confirmed.
+Vendor BSP changes require review and are never imported automatically.
 
-There are several guides for kernel developers and users. These guides can
-be rendered in a number of formats, like HTML and PDF. Please read
-Documentation/admin-guide/README.rst first.
+Enrolled boards pull the 6.18 release feed over HTTPS. Each candidate is
+checked and staged alongside the current kernel, then booted once under
+the hardware watchdog. Only local health checks promote it. Incomplete
+boots select the previous good set, then the preserved original recovery
+kernel. CI publishes candidates; it does not connect to the LAN.
+Kernel rollback does not restore shared root data or recover SD failure.
 
-In order to build the documentation, use ``make htmldocs`` or
-``make pdfdocs``.  The formatted documentation can also be read online at:
-
-    https://www.kernel.org/doc/html/latest/
-
-There are various text files in the Documentation/ subdirectory,
-several of them using the reStructuredText markup notation.
-
-Please read the Documentation/process/changes.rst file, as it contains the
-requirements for building and running the kernel, and information about
-the problems which may result by upgrading your kernel.
+Build commands, supported hardware and qualification evidence:
+  scripts/orangepi/README
+Update policy, provenance and CI:
+  scripts/orangepi/MAINTENANCE.md
+Licence and corresponding upstream documentation:
+  COPYING and Documentation/
