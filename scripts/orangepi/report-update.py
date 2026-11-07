@@ -11,6 +11,7 @@ def api(path, body=None, method=None):
     request = urllib.request.Request('https://api.github.com/repos/' + os.environ['GITHUB_REPOSITORY'] + path,
         data=None if body is None else json.dumps(body).encode(), method=method,
         headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+                 'Content-Type': 'application/json',
                  'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28'})
     with urllib.request.urlopen(request, timeout=30) as response:
         return json.load(response)
