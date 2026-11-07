@@ -22,6 +22,8 @@ jobs:
       contents: write
     outputs:
       source_sha: ${{ steps.candidate.outputs.source_sha }}
+      base_sha: ${{ steps.candidate.outputs.base_sha }}
+      target_sha: ${{ steps.candidate.outputs.target_sha }}
       branch: ${{ steps.candidate.outputs.branch }}
       target_tag: ${{ steps.candidate.outputs.target_tag }}
       previous_tag: ${{ steps.candidate.outputs.previous_tag }}
@@ -75,6 +77,8 @@ jobs:
           PREPARE_RESULT: ${{ needs.prepare.result }}
           BUILD_RESULT: ${{ needs.build.result }}
           SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
+          BASE_SHA: ${{ needs.prepare.outputs.base_sha }}
+          TARGET_SHA: ${{ needs.prepare.outputs.target_sha }}
           CANDIDATE_BRANCH: ${{ needs.prepare.outputs.branch }}
           TARGET_TAG: ${{ needs.prepare.outputs.target_tag }}
           PREVIOUS_TAG: ${{ needs.prepare.outputs.previous_tag }}

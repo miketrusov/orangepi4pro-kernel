@@ -97,8 +97,10 @@ def main():
     if source['upstream']['url'] != UPSTREAM or source['board_support']['url'] != VENDOR:
         raise RuntimeError('Source URLs changed; require an explicit updater review')
     current = git(repo, 'rev-parse', 'HEAD')
+    output('base_sha', current)
     latest = newest_release(network_git(repo, 'ls-remote', '--tags', UPSTREAM, 'refs/tags/v6.18.*'))
     output('target_tag', latest['tag'])
+    output('target_sha', latest['commit'])
     output('previous_tag', source['upstream']['tag'])
     # Fetch exactly the resolved tag object; reject movement between discovery/fetch.
     network_git(repo, 'fetch', '--no-tags', UPSTREAM, latest['tag_object'])

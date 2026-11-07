@@ -43,6 +43,7 @@ def main():
     if branch and not re.fullmatch(r'codex/update-v6\.18\.\d+-[0-9a-f]{12}', branch):
         raise ValueError('Invalid candidate branch')
     details = (f"Upstream: `{env.get('PREVIOUS_TAG', '')}` → `{tag}`.\n\n"
+               f"Port base: `{env.get('BASE_SHA', '')}`; upstream target: `{env.get('TARGET_SHA', '')}`.\n\n"
                f"Candidate: `{sha or 'not created'}`.\n\n"
                f"Prepare: **{env['PREPARE_RESULT']}**; build: **{env['BUILD_RESULT']}**.\n\n"
                f"[Run, first error and downloadable artifacts]({link}).\n\n"
