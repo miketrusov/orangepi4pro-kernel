@@ -48,12 +48,20 @@ delays of 1900 ps RX / 150 ps TX. The existing MAC delay taps are retained.
 The PHY values reproduce the working vendor setup; no PHY register writes
 are added to the driver.
 
-Status: a full cross-build passed on Ubuntu 24.04. Early hardware tests reached
-Debian 13 on NVMe and wired SSH with these board settings applied in RAM.
-A build and boot of this tree's DTB must still be checked separately. Original
-vendor firmware and a known-good kernel are retained for supervised fallback.
-This is not production qualification: storage integrity, link recovery,
-thermal/DVFS behavior and idle power require runtime testing. Debian packaging
-and weekly CI remain follow-up work; this branch does not implement unattended
-updates or boot selection. Hardware trials use an external supervisor, not a
-qualified native boot watchdog.
+Status (2026-11-07): source 553f6b0706fbe1d8e109f4d3be15382abbd53a4b
+passed a full cross-build on Ubuntu 24.04, including 144 modules. That exact
+kernel and its own compiled DTB booted Debian 13 from NVMe and reached wired
+SSH, without diagnostic DT substitutions. Ethernet negotiated 1 Gbit/s and
+DHCP succeeded; a 128 MiB direct NVMe read matched its pre-recorded hash.
+No systemd services had failed. Both CPU policies used cpufreq-dt/schedutil;
+WFI, CPU and cluster idle states were exposed. Sampled temperatures were
+42-45 C. These observations do not qualify sustained load or idle power.
+
+The supervised trial then rebooted cleanly into the preserved known-good
+kernel without forced power cycling. It was a one-shot test, not promotion
+to a persistent default. This is not production qualification: NVMe write
+stress, cold boot, link recovery, thermal/DVFS behavior and measured idle
+power remain outstanding. eMMC remains disabled. Debian packaging and weekly
+CI remain follow-up work; this branch does not implement unattended updates
+or boot selection. Hardware trials use an external supervisor, not a
+qualified native boot watchdog. Original vendor firmware is still required.
