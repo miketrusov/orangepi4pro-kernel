@@ -69,11 +69,12 @@ class MergeTests(unittest.TestCase):
     def test_merge_preserves_bsp_and_records_upstream(self):
         release = self.release()
         old = self.git('rev-parse', 'HEAD')
-        head = updater.merge_candidate(self.repo, release, 'v6.18.2', self.source)
+        head = updater.merge_candidate(self.repo, release, 'v6.18.2', self.source, 'f'*40)
         self.assertEqual(self.git('show', '-s', '--format=%P', head).split(), [old, release])
         self.assertEqual((self.repo / 'bsp.c').read_text(), 'board support\n')
         self.assertEqual((self.repo / 'upstream.c').read_text(), 'stable fix\n')
         self.assertEqual(json.loads(self.manifest.read_text())['upstream']['commit'], release)
+        self.assertEqual(json.loads(self.manifest.read_text())['upstream']['tag_object'], 'f'*40)
         self.assertEqual(self.git('status', '--porcelain'), '')
 
     def test_conflict_aborts_without_changing_head_or_manifest(self):

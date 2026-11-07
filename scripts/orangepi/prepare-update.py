@@ -54,7 +54,7 @@ def trusted_signature(status):
                for line in status.splitlines())
 
 
-def merge_candidate(repo, commit, tag, source):
+def merge_candidate(repo, commit, tag, source, tag_object=None):
     """A conflict leaves HEAD/manifest unchanged and the merge aborted."""
     previous = source['upstream']['commit']
     git(repo, 'merge-base', '--is-ancestor', previous, 'HEAD')
@@ -69,6 +69,8 @@ def merge_candidate(repo, commit, tag, source):
     try:
         git(repo, 'merge', '--no-ff', '--no-commit', commit, env=env)
         source['upstream'].update(tag=tag, commit=commit)
+        if tag_object:
+            source['upstream']['tag_object'] = tag_object
         source['status'] = 'candidate; CI and hardware qualification are separate'
         path = repo / 'scripts/orangepi/sources.json'
         path.write_text(json.dumps(source, indent=2) + '\n')
@@ -126,7 +128,7 @@ def main():
             raise RuntimeError('Reject a stable release rollback or moved existing tag')
         branch = f"codex/update-{latest['tag']}-{current[:12]}"
         git(repo, 'switch', '-c', branch)
-        current = merge_candidate(repo, latest['commit'], latest['tag'], source)
+        current = merge_candidate(repo, latest['commit'], latest['tag'], source, latest['tag_object'])
     output('source_sha', current)
     output('branch', branch)
     print(json.dumps(dict(latest, source_sha=current, branch=branch,

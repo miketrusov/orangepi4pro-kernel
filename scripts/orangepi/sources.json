@@ -2,6 +2,7 @@
   "upstream": {
     "url": "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git",
     "tag": "v6.18.62",
+    "tag_object": "3d95ff91bbe741db71925d5da8070de4bc31c993",
     "commit": "c3f63d70f236bb7685e6d11d1d9b5b351552e600"
   },
   "board_support": {
