@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: GPL-2.0-only
 import importlib.util
+import io
 from pathlib import Path
 import unittest
+import urllib.error
 from unittest.mock import patch
 
 spec = importlib.util.spec_from_file_location('reporter', Path(__file__).parents[1] / 'report-update.py')
@@ -20,6 +22,7 @@ class IncidentTests(unittest.TestCase):
         reporter.incident('failure', 'details', True)
         self.assertEqual(api.call_count, 1)
 
+
     @patch.object(reporter, 'api')
     def test_changed_failure_updates_existing_issue(self, api):
         api.return_value = [{'title': 'failure', 'body': 'old', 'number': 7}]
@@ -36,6 +39,27 @@ class IncidentTests(unittest.TestCase):
         api.return_value = []
         reporter.incident('failure', 'green run', False)
         self.assertEqual(api.call_count, 1)
+
+class PullRequestPolicyTests(unittest.TestCase):
+    @patch.object(reporter, 'incident')
+    @patch.object(reporter, 'api')
+    def test_policy_denial_reports_branch_without_changing_permissions(self, api, incident):
+        error = urllib.error.HTTPError('https://api.github.com', 403, 'Forbidden', {},
+            io.BytesIO(b'{"message":"GitHub Actions is not permitted to create or approve pull requests."}'))
+        api.side_effect = [[], error]
+        reporter.publish_pr('owner/repo', 'codex/update-v6.18.2-123456789abc', 'v6.18.2', 'candidate')
+        self.assertTrue(incident.call_args.args[2])
+        self.assertIn('/compare/', incident.call_args.args[1])
+        self.assertEqual(api.call_count, 2)
+
+    @patch.object(reporter, 'api')
+    def test_unrelated_api_denial_remains_a_reporting_failure(self, api):
+        error = urllib.error.HTTPError('https://api.github.com', 403, 'Forbidden', {},
+                                      io.BytesIO(b'{"message":"API rate limit exceeded"}'))
+        api.side_effect = [[], error]
+        with self.assertRaises(urllib.error.HTTPError):
+            reporter.publish_pr('owner/repo', 'codex/update-v6.18.2-123456789abc', 'v6.18.2', 'candidate')
+
 
 
 if __name__ == '__main__':

@@ -21,6 +21,9 @@ tested commit identities. Conflicts stop the job; no automated agent resolves
 them. The updater records the new upstream commit in `sources.json`, publishes a
 uniquely named `codex/update-*` candidate branch and builds that exact commit in
 the same workflow. A successful build gets an exact-commit check and a draft PR.
+If repository policy prevents PR creation, it opens a candidate-ready issue
+with a compare link for manual PR creation. It does not expand repository-wide
+approval permissions or introduce a privileged personal token.
 The updater never merges the PR, installs a kernel, modifies SPI or reboots a
 board. With no new release it rebuilds the current default branch.
 
@@ -81,7 +84,7 @@ stage and a run/log link. A later successful cycle closes it. The manual
 `failure_probe` input exercises reporting without updating or building a kernel.
 The report job runs trusted default-workflow code with limited write permissions;
 build jobs have read-only tokens, no LAN credentials and no deployment secrets.
-Allow GitHub Actions to create PRs in this repository's Actions settings.
+Repository-wide PR approval permissions remain unchanged.
 
 Enable GitHub Actions email notifications for failed workflows at
 <https://github.com/settings/notifications>. Scheduled notifications go to the

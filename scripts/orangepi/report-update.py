@@ -4,6 +4,7 @@
 import json
 import os
 import re
+import urllib.error
 import urllib.request
 
 
@@ -34,6 +35,27 @@ def incident(title, body, failed):
     elif not failed and existing:
         api('/issues/' + str(existing['number']) + '/comments', {'body': 'Recovered. ' + body})
         api('/issues/' + str(existing['number']), {'state': 'closed'}, 'PATCH')
+
+
+def publish_pr(repo, branch, tag, body):
+    title = '[kernel CI] Candidate ready; draft PR creation unavailable'
+    pulls = api('/pulls?state=open&head=' + repo.split('/')[0] + ':' + branch)
+    try:
+        if pulls:
+            api('/pulls/' + str(pulls[0]['number']), {'body': body}, 'PATCH')
+        else:
+            api('/pulls', {'title': f'Update Orange Pi 4 Pro to Linux {tag}', 'head': branch,
+                           'base': 'orangepi-6.18.y', 'body': body, 'draft': True})
+    except urllib.error.HTTPError as error:
+        message = error.read().decode(errors='replace')
+        if error.code != 403 or 'not permitted to create or approve pull requests' not in message:
+            raise
+        # Respect repository policy; no settings changes, PAT or approval bypass.
+        compare = f'https://github.com/{repo}/compare/orangepi-6.18.y...{branch}'
+        incident(title, body + '\n\nRepository policy prevented automatic PR creation. '
+                 f'[Review the candidate branch and create a PR manually]({compare}).', True)
+    else:
+        incident(title, body, False)
 
 
 def main():
@@ -69,12 +91,7 @@ def main():
                 'The BSP remains pinned. eMMC remains disabled because no test hardware is available.\n\n'
                 'Before merging/promoting: review the diff and qualify this exact artifact on the board '
                 'with the preserved recovery kernel and an active supervisor. A build is not a boot test.')
-        pulls = api('/pulls?state=open&head=' + repo.split('/')[0] + ':' + branch)
-        if pulls:
-            api('/pulls/' + str(pulls[0]['number']), {'body': body}, 'PATCH')
-        else:
-            api('/pulls', {'title': f'Update Orange Pi 4 Pro to Linux {tag}', 'head': branch,
-                           'base': 'orangepi-6.18.y', 'body': body, 'draft': True})
+        publish_pr(repo, branch, tag, body)
     with open(env['GITHUB_STEP_SUMMARY'], 'a') as stream:
         stream.write(details + '\n')
 
