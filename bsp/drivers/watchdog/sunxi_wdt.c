@@ -316,7 +316,20 @@ static int sunxi_wdt_probe(struct platform_device *pdev)
 
 	watchdog_set_drvdata(&sunxi_wdt->wdt_dev, sunxi_wdt);
 
-	sunxi_wdt_stop(&sunxi_wdt->wdt_dev);
+	/*
+	 * Keep firmware's watchdog covering the handoff to the watchdog core.
+	 * Updating the timeout reloads the counter without clearing MODE_EN.
+	 * The core services a boot-enabled device until userspace opens it or
+	 * watchdog.open_timeout expires.
+	 */
+	if (readl(sunxi_wdt->wdt_base + sunxi_wdt->wdt_regs->wdt_mode) &
+	    WDT_MODE_EN) {
+		sunxi_wdt_set_timeout(&sunxi_wdt->wdt_dev,
+				      sunxi_wdt->wdt_dev.timeout);
+		set_bit(WDOG_HW_RUNNING, &sunxi_wdt->wdt_dev.status);
+	} else {
+		sunxi_wdt_stop(&sunxi_wdt->wdt_dev);
+	}
 
 	watchdog_stop_on_reboot(&sunxi_wdt->wdt_dev);
 	err = devm_watchdog_register_device(dev, &sunxi_wdt->wdt_dev);
