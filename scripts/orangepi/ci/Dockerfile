@@ -17,5 +17,5 @@ RUN printf 'APT::Snapshot "20261106T000000Z";\nAcquire::Retries "2";\n' > /etc/a
        bc bison flex libssl-dev libelf-dev dwarves python3 python3-dev \
        rsync device-tree-compiler u-boot-tools kmod git ca-certificates xz-utils \
     && rm -rf /var/lib/apt/lists/* \
-    && ln -s aarch64-linux-gnu-gcc-13 /usr/local/bin/aarch64-linux-gnu-gcc
+    && ln -s /usr/bin/aarch64-linux-gnu-gcc-13 /usr/local/bin/aarch64-linux-gnu-gcc
 WORKDIR /src
