@@ -40,6 +40,8 @@ Board qualification restrictions
 The headless DT disables the optional eMMC controller: its empty-slot probe
 blocks boot in the initial 6.18 port. This is an isolation workaround, not an
 eMMC driver fix. eMMC modules are not supported by this configuration yet.
+No eMMC module is available to debug or test this path. Keep it disabled until
+someone with the hardware can validate it; a CI build does not qualify eMMC.
 SD remains the firmware/boot medium and NVMe is the target root filesystem.
 
 The upstream Motorcomm PHY driver needs explicit board data that the vendor

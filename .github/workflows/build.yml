@@ -1,0 +1,40 @@
+name: Build headless kernel
+on:
+  push:
+    branches: [orangepi-6.18.y, 'codex/**']
+  pull_request:
+    branches: [orangepi-6.18.y]
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      source_sha:
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.source_sha || github.sha }}
+          persist-credentials: false
+      - name: Build pinned cross-compiler environment
+        run: docker build --platform linux/amd64 -t opi-kernel-builder scripts/orangepi/ci
+      - name: Clean offline kernel, DTB and modules build
+        run: |
+          mkdir -p "$RUNNER_TEMP/opi-build"
+          docker run --rm --network none --platform linux/amd64 \
+            -v "$GITHUB_WORKSPACE:/src:ro" -v "$RUNNER_TEMP/opi-build:/work" \
+            -e JOBS=4 opi-kernel-builder bash /src/scripts/orangepi/ci-build.sh
+      - name: Retain candidate files and failure logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: kernel-${{ inputs.source_sha || github.sha }}
+          path: ${{ runner.temp }}/opi-build/artifacts/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30

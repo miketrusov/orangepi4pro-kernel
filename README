@@ -7,6 +7,8 @@ using board-support code from orangepi-xunlong/linux-orangepi.
 The orangepi-6.18.y branch targets Linux 6.18 LTS. It is experimental; a supervised Debian/NVMe/SSH boot has passed.
 Unattended updates are not qualified. Other kernel series, including future 7.x work, belong on
 separate branches. Build details: scripts/orangepi/README.
+Optional eMMC is disabled: no eMMC module is available for debugging or testing.
+It will remain disabled until support can be validated on real hardware.
 The upstream Linux README follows.
 
 Linux kernel
