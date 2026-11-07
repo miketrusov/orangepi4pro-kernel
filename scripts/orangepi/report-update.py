@@ -18,8 +18,14 @@ def api(path, body=None, method=None):
 
 
 def incident(title, body, failed):
-    existing = next((item for item in api('/issues?state=open&per_page=100')
-                     if item['title'] == title and 'pull_request' not in item), None)
+    existing, page = None, 1
+    while True:
+        items = api(f'/issues?state=open&per_page=100&page={page}')
+        existing = next((item for item in items
+                         if item['title'] == title and 'pull_request' not in item), None)
+        if existing or len(items) < 100:
+            break
+        page += 1
     if failed and existing is None:
         api('/issues', {'title': title, 'body': body})
     elif failed and existing['body'] != body:
