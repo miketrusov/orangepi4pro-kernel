@@ -97,6 +97,21 @@ The external Tapo supervisor remains a development rescue, not a requirement
 for these qualified native watchdog paths. Cloud compilation alone does not
 qualify a candidate for other boards or peripherals.
 
+The complete [hosted rehearsal](https://github.com/miketrusov/orangepi4pro-kernel/actions/runs/42423057232)
+passed preparation, build, publication and reporting. On the reference board,
+[release a5488081141c](https://github.com/miketrusov/orangepi4pro-kernel/releases/tag/opi4pro-v6.18.62-a5488081141c)
+was anonymously pulled, validated, staged into inactive B, booted and promoted
+locally with A retained as previous-good. It then passed clean shutdown, verified
+outlet OFF/ON and cold-boot health promotion. PID1 owns the active 16-second
+watchdog; there are no failed services. Hourly public polling is enabled, and a
+repeat pull correctly reported up-to-date without rebooting. This qualifies that
+exact artifact on one headless reference board, not every board/peripheral.
+The operator-specific controller is managed through separate Ansible playbooks;
+this kernel fork does not supply a generic disk installer or board enrollment.
+Retired local candidate/module/input trees are retained; staging checks free
+space and stops safely rather than pruning unowned files. Automatic retention
+cleanup and measured idle power/sustained load qualification remain future work.
+
 SPI-to-NVMe boot can retain this design: SPI holds firmware, NVMe holds separate
 known-good/candidate boot sets and the selection state, and SD is rescue media.
 The existing implementation stores its selection state on SD. An NVMe selector,
@@ -158,3 +173,8 @@ accepts the token as `vault_orangepi_kernel_notify_token` in encrypted
 `ansible/secrets/orangepi-kernel.yml` and installs it root-only. Do not put the
 token in source control or paste it into issues/logs. Each acknowledged source
 report is recorded locally to suppress repeated notifications.
+
+The optional notification workflow passed a deliberate red-state probe on
+2026-11-08: [callback test](https://github.com/miketrusov/orangepi4pro-kernel/actions/runs/42453238912).
+The reference board still has no callback credential; this probe validates the
+workflow, not unattended authenticated delivery from the board.
