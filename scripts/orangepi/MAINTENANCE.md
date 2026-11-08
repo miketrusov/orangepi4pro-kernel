@@ -85,14 +85,17 @@ no GitHub token or incoming LAN access. Its allowed repository, 6.18 channel
 and watchdog implementation are pinned by Ansible. Kernel and firmware changes
 outside that qualified contract require explicit review.
 
-Watchdog source `795a17b` builds cleanly in the pinned container. Its exact
-kernel reached SSH with systemd owning the 16-second timer, stayed alive beyond
-a full interval and returned to original recovery without external power.
-A deliberate firmware hang also reset to recovery without Tapo. Initramfs,
-runtime panic and persistent A/B live qualification are being completed;
-cloud compilation alone does not qualify any candidate. Real U-Boot Hush
-sandbox tests cover the selector and its failure/fallback branches. The
-external Tapo supervisor remains the development rescue during qualification.
+On 2026-11-08, exact watchdog source `795a17b351bd53b5c2ffd3953d541b67e6ba898e`
+passed healthy PID1 adoption, pre-kernel stall, initramfs stall and runtime panic
+on one Orange Pi 4 Pro. All three faults reset to original recovery without an
+external power cycle. Sixteen real U-Boot Hush sandbox cases passed for the A/B
+selector. The migrated v2 bootstrap passed a live canary/next-recovery check.
+Managed slot A passed enrollment and health promotion; deliberately masking SSH
+in inactive slot B caused automatic rollback to A with the SSH health failure
+persisted in the journal. No external power cycle was needed for that rollback.
+The external Tapo supervisor remains a development rescue, not a requirement
+for these qualified native watchdog paths. Cloud compilation alone does not
+qualify a candidate for other boards or peripherals.
 
 SPI-to-NVMe boot can retain this design: SPI holds firmware, NVMe holds separate
 known-good/candidate boot sets and the selection state, and SD is rescue media.
@@ -134,10 +137,24 @@ Automatic agent repairs remain a separate future change.
 
 Keep repair attempts separate from deterministic update/build/publish jobs.
 A future monthly workflow can consume the existing failure issue and exact log,
-give Copilot CLI one bounded repair attempt, rebuild and open a draft PR.
+give Copilot CLI one bounded repair attempt, rebuild and open a draft PR
+(or a compare-link issue where repository PR policy requires it).
 Do not let the repair job alter the recovery/qualification gates or merge its
 own changes. Copilot CLI programmatic mode is available on Free, but the hosted
 issue-assigned cloud agent requires a paid plan. Personal-allowance CLI runs
 need a dedicated Copilot token; usage and authentication must be checked before
 enabling. A monthly schedule limits attempts, not token consumption.
-No agent repair workflow is enabled here yet.
+No agent repair workflow is enabled here yet. The weekly signed-stable build
+schedule remains unchanged. See the current [Actions CLI setup](https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-copilot-cli/automate-with-actions)
+and [plan comparison](https://github.com/features/copilot/plans) before enabling;
+keep its credentials and write step separate from untrusted repair execution.
+
+Board-side rollback emails use the separate `board-failure.yml` dispatch
+workflow. The board needs a dedicated fine-grained token restricted to this
+repository with Actions read/write permission. Without that credential,
+rollback/quarantine is automatic but board failure reporting remains local;
+CI build/merge/publication emails work independently. The Ansible controller
+accepts the token as `vault_orangepi_kernel_notify_token` in encrypted
+`ansible/secrets/orangepi-kernel.yml` and installs it root-only. Do not put the
+token in source control or paste it into issues/logs. Each acknowledged source
+report is recorded locally to suppress repeated notifications.

@@ -64,7 +64,8 @@ def main():
     if not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', repo) or not run.isdecimal():
         raise ValueError('Unexpected repository/run identity')
     link = f'https://github.com/{repo}/actions/runs/{run}'
-    okay = env['PREPARE_RESULT'] == env['BUILD_RESULT'] == env.get('PUBLISH_RESULT', 'success') == 'success'
+    built = env['PREPARE_RESULT'] == env['BUILD_RESULT'] == 'success'
+    okay = built and env.get('PUBLISH_RESULT', 'success') == 'success'
     sha, branch, tag = env.get('SOURCE_SHA', ''), env.get('CANDIDATE_BRANCH', ''), env.get('TARGET_TAG', '')
     if sha and not re.fullmatch(r'[0-9a-f]{40}', sha):
         raise ValueError('Invalid candidate identity')
@@ -78,7 +79,7 @@ def main():
                'CI publishes a compile-tested candidate. Enrolled boards pull it and independently trial/qualify/promote it; CI has no LAN credentials.')
     if sha:
         api('/check-runs', {'name': 'Headless candidate build', 'head_sha': sha,
-            'status': 'completed', 'conclusion': 'success' if okay else 'failure',
+            'status': 'completed', 'conclusion': 'success' if built else 'failure',
             'details_url': link, 'output': {'title': 'Compile-only candidate result', 'summary': details}})
     incident('[kernel CI] Weekly 6.18 update needs attention', details, not okay)
     vendor, pinned = env.get('VENDOR_HEAD', ''), env.get('VENDOR_PINNED', '')

@@ -1,0 +1,35 @@
+name: Board kernel rollback needs attention
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: Exact failed source SHA reported by the enrolled board
+        required: true
+        type: string
+      reason:
+        description: Bounded rollback reason without credentials or private logs
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  notify:
+    if: github.ref == 'refs/heads/orangepi-6.18.y'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Report the automatic rollback through native Actions failure email
+        env:
+          FAILED_SOURCE: ${{ inputs.source }}
+          FAILURE_REASON: ${{ inputs.reason }}
+        run: |
+          python3 - <<'PY'
+          import os, re
+          source, reason = os.environ['FAILED_SOURCE'], os.environ['FAILURE_REASON']
+          if not re.fullmatch('[0-9a-f]{40}', source) or len(reason) > 500 or '\n' in reason:
+              raise SystemExit('Invalid board failure report')
+          print('An enrolled board rejected kernel source ' + source)
+          print(reason)
+          print('Automatic rollback preserved the previous good or original recovery kernel.')
+          raise SystemExit(1)
+          PY

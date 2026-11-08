@@ -1,10 +1,11 @@
 # SPDX-License-Identifier: GPL-2.0-only
 import importlib.util
 import io
+import os
 from pathlib import Path
 import unittest
 import urllib.error
-from unittest.mock import patch
+from unittest.mock import patch, mock_open
 
 spec = importlib.util.spec_from_file_location('reporter', Path(__file__).parents[1] / 'report-update.py')
 reporter = importlib.util.module_from_spec(spec)
@@ -12,6 +13,17 @@ spec.loader.exec_module(reporter)
 
 
 class IncidentTests(unittest.TestCase):
+    @patch.object(reporter, 'incident')
+    @patch.object(reporter, 'api')
+    def test_publication_failure_alerts_without_misreporting_compilation(self, api, incident):
+        with patch.dict(os.environ, {'GITHUB_REPOSITORY': 'owner/repo', 'GITHUB_RUN_ID': '123',
+                'PREPARE_RESULT': 'success', 'BUILD_RESULT': 'success', 'PUBLISH_RESULT': 'failure',
+                'SOURCE_SHA': 'a' * 40, 'CANDIDATE_BRANCH': '', 'VENDOR_HEAD': '',
+                'GITHUB_STEP_SUMMARY': '/unused'}, clear=True), patch('builtins.open', mock_open()):
+            reporter.main()
+        self.assertEqual(api.call_args.args[1]['conclusion'], 'success')
+        self.assertTrue(incident.call_args.args[2])
+
     @patch.object(reporter, 'api')
     def test_failure_opens_one_issue_and_repeat_does_not_comment(self, api):
         api.return_value = []
