@@ -19,7 +19,7 @@ use core::ptr::NonNull;
 /// Must reference a `[c_ulong]` long enough to fit `data.len()` bits.
 /// Must not be longer than [`i32::MAX`] bits, so offsets and lengths used with
 /// [`Bitmap`] functions fit in the `int` and `unsigned int` arguments of the C bitmap API.
-/// This also matches [`BitmapVec::MAX_LEN`].
+/// This also matches the maximum length accepted by [`BitmapVec::new`].
 #[cfg_attr(CONFIG_64BIT, repr(align(8)))]
 #[cfg_attr(not(CONFIG_64BIT), repr(align(4)))]
 pub struct Bitmap {
@@ -477,7 +477,13 @@ impl Bitmap {
 
     /// Finds next set bit, starting from `start`.
     ///
-    /// Returns `None` if `start` is greater or equal to `self.nbits`.
+    /// Returns `None` if no bits are set on or after the given index. The
+    /// index `start` must be in bounds.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `CONFIG_RUST_BITMAP_HARDENED` is enabled and `start` is
+    /// out of bounds.
     #[inline]
     pub fn next_bit(&self, start: usize) -> Option<usize> {
         bitmap_assert!(
@@ -497,7 +503,14 @@ impl Bitmap {
     }
 
     /// Finds next zero bit, starting from `start`.
-    /// Returns `None` if `start` is greater than or equal to `self.len()`.
+    ///
+    /// Returns `None` if no bits are zero on or after the given index. The
+    /// index `start` must be in bounds.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `CONFIG_RUST_BITMAP_HARDENED` is enabled and `start` is
+    /// out of bounds.
     #[inline]
     pub fn next_zero_bit(&self, start: usize) -> Option<usize> {
         bitmap_assert!(
